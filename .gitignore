@@ -1,0 +1,9 @@
+app/voskModels/
+
+__pycache__/
+*.pyc
+.env
+
+.DS_Store
+.vscode/
+.idea/

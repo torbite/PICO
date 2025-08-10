@@ -1,0 +1,121 @@
+def draw_boxes_on_frame(frame, predictions):
+    """Draw bounding boxes on a video frame."""
+    for label in predictions:
+        for box in predictions[label]:
+            (x1, y1), (x2, y2) = box
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.9, (0, 255, 0), 2)
+    return frame
+
+
+def process_video_and_save(app_name: str, input_video_path: str, output_video_path: str, grayscale: bool = False):
+    """Process a video with YOLO and save output with bounding boxes drawn."""
+    
+    cap = cv2.VideoCapture(input_video_path)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+
+    pathToModel = f"yoloModels/{app_name}/mainModel.pt"
+    model = YOLO(pathToModel)
+
+    frame_idx = 0
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        predictions = processFrame(model, app_name, frame, grayscale)
+
+        frame_with_boxes = draw_boxes_on_frame(frame, predictions)
+
+        out.write(frame_with_boxes)
+
+        print(f"Processed frame {frame_idx}")
+        frame_idx += 1
+
+    cap.release()
+    out.release()
+    print(f"Video saved to {output_video_path}")
+
+
+def processFrame(model, app_name, frame, grayscale):
+    """Process a single frame for object detection."""
+
+    image = copy.deepcopy(frame)
+
+    if image.shape[2] == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+
+    if grayscale and len(image.shape) == 3 and image.shape[2] == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    app_name = app_name.lower()
+    if app_name not in ["find_app", "separate_text"]:
+        find_preds = getModelPrediction("find_app", image, True)
+
+        if app_name not in find_preds.keys():
+            print(f"App '{app_name}' not found in predictions.")
+            return {}
+
+        app_area = find_preds[app_name][0]
+        x1, y1 = app_area[0]
+        x2, y2 = app_area[1]
+
+        masked = np.zeros_like(image)
+        if len(image.shape) == 2:
+            masked[y1:y2, x1:x2] = image[y1:y2, x1:x2]
+        else:
+            masked[y1:y2, x1:x2, :] = image[y1:y2, x1:x2, :]
+
+        image = masked
+
+    if len(image.shape) == 2:
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+    results = model.predict(source=copy.deepcopy(image), save=False, conf=0.25, verbose=False)
+
+    objects = {}
+    r = results[0]
+    for box in r.boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+        class_id = int(box.cls[0].item())
+        label = r.names[class_id]
+
+        if label not in objects:
+            objects[label] = []
+        objects[label].append(((x1, y1), (x2, y2)))
+
+    return objects
+
+
+def getModelPrediction(app_name: str, input_data, grayscale: bool = False):
+    """General function to get predictions for image or video."""
+    is_video = isinstance(input_data, str) and os.path.isfile(input_data)
+
+    pathToModel = f"yoloModels/{app_name}/mainModel.pt"
+    model = YOLO(pathToModel)
+
+    if not is_video:
+        return processFrame(model, app_name, input_data, grayscale)
+    else:
+        cap = cv2.VideoCapture(input_data)
+        frame_results = {}
+        frame_idx = 0
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            predictions = processFrame(model, app_name, frame, grayscale)
+            frame_results[frame_idx] = predictions
+            frame_idx += 1
+
+        cap.release()
+        return frame_results
