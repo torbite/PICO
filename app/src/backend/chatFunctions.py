@@ -6,7 +6,9 @@ import yoloFunctions as yf
 import json, ast, re
 from mss import mss
 import subprocess
+from dotenv import load_dotenv
 sct = mss()
+load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 class AI_character():
