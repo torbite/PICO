@@ -26,6 +26,7 @@ export async function checkSubscription() {
 }
 
 export async function sendPrompt(prompt: string) {
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...authHeaders()
@@ -35,7 +36,6 @@ export async function sendPrompt(prompt: string) {
     headers,
     body: JSON.stringify({ prompt })
   })
-  if (!res.ok) throw new Error('HTTP ' + res.status)
   const data = await res.json()
-  return data.reply ?? '(sem resposta)'
+  return data ?? '(sem resposta)'
 }

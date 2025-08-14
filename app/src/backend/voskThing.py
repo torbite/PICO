@@ -1,4 +1,4 @@
-import main as main
+import pico_main as pico_main
 import sounddevice as sd
 import queue
 import vosk
@@ -39,7 +39,7 @@ with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16',
                 #     continue
                 print("📝 You said:", text)
                 WaitingForPicoResponse = True
-                main.sendUserInput(text, 0)
+                pico_main.sendUserInput(text, 0)
                 WaitingForPicoResponse = False
         else:
             partial = json.loads(recognizer.PartialResult())

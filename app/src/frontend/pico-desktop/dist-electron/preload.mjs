@@ -1,7 +1,8 @@
 "use strict";
 const electron = require("electron");
 electron.contextBridge.exposeInMainWorld("pico", {
-  version: "0.1.0"
+  version: "0.1.0",
+  send: (prompt, opts) => electron.ipcRenderer.invoke("pico:send", prompt, opts)
 });
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   on(...args) {

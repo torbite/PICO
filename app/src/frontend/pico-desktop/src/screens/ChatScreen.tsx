@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import MessageBubble from '../components/MessageBubble'
 import InputBar from '../components/InputBar'
-import { sendPrompt } from '../app/api'
+import { sendPrompt } from '../app/stdio'
 
 type Msg = { id:string; role:'user'|'assistant'; text:string; createdAt:number }
 
@@ -18,9 +18,10 @@ export default function ChatScreen(){
     setMessages(m=>[...m,user]); scrollToEnd()
     try{
       const reply = await sendPrompt(text)
-      const bot: Msg = { id:'a'+Date.now(), role:'assistant', text: reply, createdAt:Date.now() }
+      const bot: Msg = { id:'a'+Date.now(), role:'assistant', text: reply ?? '(sem resposta)', createdAt:Date.now() }
       setMessages(m=>[...m,bot]); scrollToEnd()
     }catch(e){
+      console.log(e)
       setMessages(m=>[...m,{ id:'e'+Date.now(), role:'assistant', text:'Falha ao falar com o PICO.', createdAt:Date.now() }])
       scrollToEnd()
     }

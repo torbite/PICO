@@ -1,3 +1,6 @@
 pyttsx3
 langchain
 langchain_community
+flask
+langchain-core
+flask-cors

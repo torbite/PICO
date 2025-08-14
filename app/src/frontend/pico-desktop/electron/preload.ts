@@ -1,7 +1,8 @@
 import { ipcRenderer, contextBridge } from 'electron'
 
 contextBridge.exposeInMainWorld('pico', {
-  version: '0.1.0'
+  version: '0.1.0',
+  send: (prompt: string, opts?: { asSystem?: boolean; speak?: boolean }) => ipcRenderer.invoke('pico:send', prompt, opts)
 })
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
