@@ -95,14 +95,12 @@ def handleData(data: list):
 
 def getPicoResponse(user_input):
     global PICO_AI, CONSIOUSNESS_AI, speaker
-    # CONSIOUSNESS_AI.resetMemory()
+    CONSIOUSNESS_AI.resetMemory()
     computerInfo = chatFunctions.getComputerInfo()
     time2 = time.time()
     inp = f'Computer Info: {computerInfo}\nPrompt: {user_input}'
     response = PICO_AI.message(inp)
     data = decompileJson(response)
-    # print(response)
-    # print(data)
     user_response = data["user_response"]
     prompt = data["prompt"]
 
@@ -117,12 +115,14 @@ def getPicoResponse(user_input):
     try:
         retult = handleData(data)
         finalResponse = PICO_AI.systemMessage(f"The functions responses: {retult}. Now explain to the user what's happened")
-        speaker.speak(user_response)
+        data = decompileJson(finalResponse)
+        finalUserResponse = data["user_response"]
+        speaker.speak(finalResponse)
         speaker.wait_until_done()
-        yield finalResponse
-        return finalResponse
+        yield finalUserResponse
+        return finalUserResponse
     except Exception as e:
-        print(data)
+        # print(data)
         print(e)
         yield "error"
     # text = data["response"]
@@ -130,6 +130,9 @@ def getPicoResponse(user_input):
 
 print()
 if __name__ == "__main__":
+    print("PICO_AI id:", id(PICO_AI), "mem id:", id(PICO_AI.memory))
+    print("CONS  id:", id(CONSIOUSNESS_AI), "mem id:", id(CONSIOUSNESS_AI.memory))
+    input()
     while True:
         r = input("--> ")
         time1 = time.time()
@@ -140,3 +143,4 @@ if __name__ == "__main__":
         time2 = time.time()
         dt = time2- time1
         print(dt)
+        print(len(PICO_AI.memory))
