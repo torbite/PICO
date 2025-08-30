@@ -4,19 +4,18 @@ from langchain.schema import BaseMessage, HumanMessage, SystemMessage, AIMessage
 import pyautogui as gui, numpy as np, cv2, time, copy, os
 import yoloFunctions as yf
 import json, ast, re
-from mss import mss
+import pyautogui as gui
 import subprocess, platform, datetime
 from dotenv import load_dotenv
-sct = mss()
 load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 class AI_character():
-    def __init__(self, objective):
-        self.model = ChatOpenAI(model="gpt-5-nano", temperature=1)
+    def __init__(self, objective, ai_model = "gpt-5-nano"):
+        self.model = ChatOpenAI(model=ai_model, temperature=1)
         # self.model = ChatOllama(model="llama3")
         self.objective = objective
-        self.models = ['gpt-4o-mini','gpt-5-nano','gpt-4', 'gpt-5-mini']
+        self.models = ['gpt-4o-mini','gpt-5-nano','gpt-4', 'gpt-4.1-nano', 'gpt-5-mini']
         self.memory = [
             SystemMessage(objective)
         ]
@@ -35,6 +34,11 @@ class AI_character():
         self.memory.append(AIMessage(response))
         return response#, content
     
+    def resetMemory(self):
+        self.memory = [
+            SystemMessage(self.objective)
+        ]
+    
     def changeAiModel(self, modelName):
         if modelName in self.models:
             self.model = ChatOpenAI(model=modelName)
@@ -42,8 +46,8 @@ class AI_character():
 
 
 class AI_builder():
-    def __init__(self, objective):
-        self.model = ChatOpenAI(model="gpt-4.1-nano", temperature=1)
+    def __init__(self, objective, ai_model = "gpt-4.1-nano"):
+        self.model = ChatOpenAI(model=ai_model, temperature=1)
         # self.model = ChatOllama(model="llama3")
         self.objective = objective
         self.memory = [

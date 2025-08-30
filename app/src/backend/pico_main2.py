@@ -15,21 +15,24 @@ funcDocs = {}
 for i in chatFunctions.functions:
    funcDocs[i.__name__] = i.__doc__
 
-mainInstructions = ""
+consiousnessInstructions = ""
+picoInstructions = ""
 aiPersonality = ""
-with open("../../PICO_AI_Instructions/mainInstructions.txt", 'r') as file:
+with open("../../PICO_AI_Instructions/consiousnessInstructions.txt", 'r') as file:
     mainInstructions = file.read()
+with open("../../PICO_AI_Instructions/picoInstructions.txt", 'r') as file:
+    picoInstructions = file.read()
 with open("../../PICO_AI_Instructions/aiPersonality.txt", 'r') as file:
     aiPersonality = file.read()
 
-userInformation = f""""""
+# userInformation = f""""""
 functionsInformation = f"""The available functions are: {funcDocs}"""
 
-functions_prompt = f"{mainInstructions}\n {functionsInformation}\n {aiPersonality}\n {userInformation}"
+consiousness_prompt = f"{mainInstructions}\n {functionsInformation}"
+pico_prompt = f"{picoInstructions}\n{aiPersonality}\nHere is a list of everything that can be executed. The given action is not possible say you cannot do it {functionsInformation}"
 
-PICO_AI = chatFunctions.AI_character(functions_prompt)
-# PICO_AI = chatFunctions.AI_character(llamaPrompt, False)
-# PICO_AI.changeAiModel("gpt-4.1-nano")
+PICO_AI = chatFunctions.AI_character(pico_prompt, "gpt-4.1-nano")
+CONSIOUSNESS_AI = chatFunctions.AI_character(consiousness_prompt, "gpt-5-nano")
 
 ### --- USE PICO FUNCTIONS --- ###
 
@@ -39,6 +42,7 @@ def decompileJson(json_response):
         return data
     except Exception as e:
         print(json_response)
+        print(f"error while loading json: {e}")
         return f"error while loading json: {e}"
     
 function_names = [i.__name__ for i in chatFunctions.functions]
@@ -56,8 +60,8 @@ def executeFunction(function_name, parameters):
     return result
 
 def handleData(data: list):
-    global PICO_AI
-    all_present = all(s in data.keys() for s in ['response', 'function', 'parameters'])
+    global CONSIOUSNESS_AI
+    all_present = all(s in data.keys() for s in ['function', 'parameters'])
     if not all_present:
         print("\nNOT ALL PRESENT")
         print(data)
@@ -68,46 +72,55 @@ def handleData(data: list):
     function_name = data["function"]
     parameters = data["parameters"]
     
+    messages = []
+
     while function_name != None and function_name != "":
-        print("")
-        print("EXECUTING FUNVCTION")
-        print(function_name, parameters)
-        print()
-        response = data["response"]
-        yield response
-        result = executeFunction(function_name, parameters)
-        message = f"function {function_name} executed and returned {result}"
-        pico_response = PICO_AI.systemMessage(message)
+        try:
+            result = executeFunction(function_name, parameters)
+            message = f"function {function_name} executed and returned {result}"
+        except Exception as e:
+            message =  f"function {function_name} tried to be executed but errored: {e}"
+        messages.append(message)
+        pico_response = CONSIOUSNESS_AI.systemMessage(message)
         data = decompileJson(pico_response)
-        print(pico_response)
-        print(data)
-        # input()
         function_name = data["function"]
         parameters = data["parameters"]
-
-    yield data["response"]
-    return data["response"]
-
+    
+    final_message = "\n".join(messages)
+    return final_message
     
 
 
 def getPicoResponse(user_input):
+    global PICO_AI, CONSIOUSNESS_AI
     computerInfo = chatFunctions.getComputerInfo()
     time2 = time.time()
     inp = f'Computer Info: {computerInfo}\nPrompt: {user_input}'
     response = PICO_AI.message(inp)
     data = decompileJson(response)
-    seggages_ment = []
+    # print(response)
+    # print(data)
+    user_response = data["user_response"]
+    prompt = data["prompt"]
+
+    yield user_response
+    if not prompt:
+        return
+    
+    consiousness_response = CONSIOUSNESS_AI.message(inp + "\n" + prompt)
+    data = decompileJson(consiousness_response)
+
     try:
-        for response in handleData(data):
-            seggages_ment.append(response)
-            yield(response)
+        retult = handleData(data)
+        finalResponse = PICO_AI.systemMessage(f"The functions responses: {retult}. Now explain to the user what's happened")
+        yield finalResponse
+        return finalResponse
     except Exception as e:
         print(data)
         print(e)
-        return "error"
+        yield "error"
     # text = data["response"]
-    return seggages_ment
+    return
 
 print()
 if __name__ == "__main__":
