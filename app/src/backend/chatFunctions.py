@@ -43,7 +43,7 @@ class AI_character():
 
 class AI_builder():
     def __init__(self, objective):
-        self.model = ChatOpenAI(model="gpt-5-nano", temperature=1)
+        self.model = ChatOpenAI(model="gpt-4.1-nano", temperature=1)
         # self.model = ChatOllama(model="llama3")
         self.objective = objective
         self.memory = [
@@ -234,7 +234,7 @@ def sendMessageOnWhatsApp(conversation_name, messages):
             writeText(message)
             gui.press("enter")
             time.sleep(0.25)
-            return "messages sent"
+        return "messages sent"
     
     yf.clickOnElement(send_area)
     writeText(messages)
