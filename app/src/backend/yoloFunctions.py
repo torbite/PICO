@@ -1,5 +1,4 @@
 from ultralytics import YOLO
-from mss import mss
 import numpy as np
 import cv2
 import pyautogui as gui
@@ -15,9 +14,9 @@ import torch
 proportions = ()
 def getScreenProportions():
     """This function takes the screen size and the gui size and returns the proportions of the screen"""
-    sct = mss()
+    
 
-    screen = sct.grab(sct.monitors[1])
+    screen = gui.screenshot()
     image = np.array(screen)
     image = cv2.cvtColor(np.array(screen), cv2.COLOR_BGRA2BGR)
     
@@ -47,12 +46,20 @@ for m in models.values():
     _ = m.predict(source=np.zeros((640,640,3), dtype=np.uint8), imgsz=640, device=DEVICE, verbose=False)
 
 def getCurrentScreenImage():
-    """This function takes a screenshot of the current screen and returns it as a numpy array that's already converted to BGR"""
-    sct = mss()
-    screen = sct.grab(sct.monitors[1])
-    image = np.array(screen)
-    image = cv2.cvtColor(np.array(screen), cv2.COLOR_BGRA2BGR)
-    return image
+    """Return current screen as a NumPy array in BGR (for OpenCV)."""
+    img = gui.screenshot()  # PIL Image
+    arr = np.array(img)
+
+    if img.mode == "RGB":
+        bgr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+    elif img.mode == "RGBA":
+        bgr = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGR)
+    else:
+        # normalize weird modes
+        arr = np.array(img.convert("RGB"))
+        bgr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+
+    return bgr
 
 def getModelPrediction(app_name : str, imagex : np.array, grayscale : bool = True):
     """This function takes the ai model and the image and returns the predictions of the model"""
@@ -71,11 +78,12 @@ def getModelPrediction(app_name : str, imagex : np.array, grayscale : bool = Tru
     if app_name != "find_app" and app_name != "separate_text":
         find_preds = getModelPrediction("find_app", image, True)
         # print(find_preds)
-        if app_name not in find_preds.keys():
+        asa = "whatsapp" if app_name == "whatsapp2" else app_name
+        if asa not in find_preds.keys():
             print(f"App '{app_name}' not found in predictions.")
             raise KeyError(f"App '{app_name}' not found in predictions.")
 
-        app_area = find_preds[app_name][0]
+        app_area = find_preds[asa][0]
         x1, y1 = app_area[0]
         x2, y2 = app_area[1]
 
@@ -110,6 +118,9 @@ def getModelPrediction(app_name : str, imagex : np.array, grayscale : bool = Tru
         objects[label].append(((x1,y1),(x2,y2)))
 
     objects = {k.lower(): v for k, v in objects.items()}
+
+    # saveImage(image, "teste.png", objects)
+
     return objects
 
 def getMiddlePosition(rectangle_array):
@@ -205,6 +216,7 @@ def getAppElements(AppName: str = "", withText:bool= False, grayscale: bool = Tr
         return
     
     img = getCurrentScreenImage()
+    cv2.imwrite("curr.png", img)
     try:
         preds = getModelPrediction(AppName.lower(), img, grayscale=grayscale)
     except KeyError as e:
@@ -229,7 +241,6 @@ def clickOnElement(element):
     """This function takes a tuple with the coordinates of the element and clicks on it"""
     global proportions
     # proportions = proportions
-
     if isinstance(element[1], str):
         element = element[0]
     middle_point = getMiddlePosition(element)
@@ -243,6 +254,47 @@ def clickOnElement(element):
     # time.sleep(0.5)
     return None
 
+def moveCursorToElement(element):
+    global proportions
+    # proportions = proportions
+
+    if isinstance(element[1], str):
+        element = element[0]
+    middle_point = getMiddlePosition(element)
+    x_fake = middle_point[0]
+    y_fake = middle_point[1]
+    x = x_fake * proportions[0]
+    y = y_fake * proportions[1]
+    gui.moveTo(x, y)
+
+
+def scroll_at(element, seconds: float, direction: str = "down",
+              amount_per_step: int = 10, step_sleep: float = 0.02):
+    """
+    Move cursor to (x, y) and scroll continuously for `seconds`.
+
+    direction: "down" or "up"
+    amount_per_step: scroll delta per step (positive scrolls up in pyautogui, negative scrolls down)
+    move_duration: time to glide the cursor to (x, y)
+    step_sleep: delay between scroll steps (controls rate)
+    """
+    # Convert direction to pyautogui's sign convention
+    if direction.lower() == "down":
+        amt = -abs(amount_per_step)
+    elif direction.lower() == "up":
+        amt = abs(amount_per_step)
+    else:
+        raise ValueError("direction must be 'up' or 'down'")
+
+    # Go to the target point
+
+    moveCursorToElement(element)
+
+    # Scroll loop
+    t0 = time.perf_counter()
+    while (time.perf_counter() - t0) < seconds:
+        gui.scroll(amt)
+        time.sleep(step_sleep)
 ################################################################################################
 
 ################################################################################################

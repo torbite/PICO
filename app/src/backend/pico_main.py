@@ -69,19 +69,6 @@ functions_prompt = f"{mainInstructions}\n {functionsInformation}\n {aiPersonalit
 
 PICO_AI = chatFunctions.AI_character(functions_prompt)
 
-def getComputerInfo():
-    """This function gets the computer information and returns it as a dictionary"""
-    local_tz = datetime.datetime.now().astimezone().tzinfo
-    now = datetime.datetime.now(local_tz)
-    info = {}
-    screen = yoloFunctions.getCurrentScreenImage()
-    apps = yoloFunctions.getModelPrediction("find_app", screen)
-    info["open_apps"] = list(apps.keys()) if len(list(apps.keys())) > 0 else "No apps are open"
-    info["os"] = platform.system()
-    info["current_day"] = f"year {now.year}| month {now.strftime('%m')}| day {now.strftime('%d')}|"
-    info["current_time"] = now.strftime("%H:%M:%S")
-    return info
-
 def decompileAiJson(json_response, usr_msg):
     try:
         if isinstance(json_response, dict):

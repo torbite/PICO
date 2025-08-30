@@ -38,6 +38,7 @@ def decompileJson(json_response):
         data = json.loads(json_response)
         return data
     except Exception as e:
+        print(json_response)
         return f"error while loading json: {e}"
     
 function_names = [i.__name__ for i in chatFunctions.functions]

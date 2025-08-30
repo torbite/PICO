@@ -5,7 +5,7 @@ import pyautogui as gui, numpy as np, cv2, time, copy, os
 import yoloFunctions as yf
 import json, ast, re
 from mss import mss
-import subprocess
+import subprocess, platform, datetime
 from dotenv import load_dotenv
 sct = mss()
 load_dotenv()
@@ -26,14 +26,14 @@ class AI_character():
         content = self.model.invoke(self.memory)
         response = content.content
         self.memory.append(AIMessage(response))
-        return response, content
+        return response#, content
     
     def systemMessage(self, system_message):
         self.memory.append(SystemMessage(system_message))
         content = self.model.invoke(self.memory)
         response = content.content
         self.memory.append(AIMessage(response))
-        return response, content
+        return response#, content
     
     def changeAiModel(self, modelName):
         if modelName in self.models:
@@ -65,6 +65,19 @@ class AI_builder():
 # --------------------------------------------------- # --------------------------------------------------- #
 # ------------------------------------------ BASE CHAT FUNCTIONS ------------------------------------------ #
 # --------------------------------------------------- # --------------------------------------------------- #
+
+def getComputerInfo():
+    """This function gets the computer information and returns it as a dictionary"""
+    local_tz = datetime.datetime.now().astimezone().tzinfo
+    now = datetime.datetime.now(local_tz)
+    info = {}
+    screen = yf.getCurrentScreenImage()
+    apps = yf.getModelPrediction("find_app", screen)
+    info["open_apps"] = list(apps.keys()) if len(list(apps.keys())) > 0 else "No apps are open"
+    info["os"] = platform.system()
+    info["current_day"] = f"year {now.year}| month {now.strftime('%m')}| day {now.strftime('%d')}|"
+    info["current_time"] = now.strftime("%H:%M:%S")
+    return info
 
 def writeText(text):
     """This function takes a string and writes it to the screen"""
