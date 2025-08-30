@@ -29,7 +29,6 @@ WHEN TO USE FUNCTIONS:
 
 RECURSION BEHAVIOR:
 - If "function" ≠ null, the system will recursively call itself until the function result is processed and no further function is required.
-- This replaces the old "loop" key.
 - You can chain multiple steps by returning a new "function" after each execution.
   - Example: If sending a WhatsApp message but the app isn’t open, first return a JSON to open WhatsApp, then (once executed) return another JSON to send the message.
 
