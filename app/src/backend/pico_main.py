@@ -94,6 +94,7 @@ def handleData(data: list):
 
 
 def getPicoResponse(user_input):
+    print("aaaaaa")
     global PICO_AI, CONSIOUSNESS_AI, speaker
     CONSIOUSNESS_AI.resetMemory()
     computerInfo = chatFunctions.getComputerInfo()
@@ -130,9 +131,9 @@ def getPicoResponse(user_input):
 
 print()
 if __name__ == "__main__":
-    print("PICO_AI id:", id(PICO_AI), "mem id:", id(PICO_AI.memory))
-    print("CONS  id:", id(CONSIOUSNESS_AI), "mem id:", id(CONSIOUSNESS_AI.memory))
-    input()
+    # print("PICO_AI id:", id(PICO_AI), "mem id:", id(PICO_AI.memory))
+    # print("CONS  id:", id(CONSIOUSNESS_AI), "mem id:", id(CONSIOUSNESS_AI.memory))
+    # input()
     while True:
         r = input("--> ")
         time1 = time.time()
