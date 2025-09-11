@@ -1,4 +1,4 @@
-app/voskModels/
+app/src/voskModels/
 
 __pycache__/
 *.pyc
