@@ -83,7 +83,11 @@ def handleData(data: list):
         except Exception as e:
             message =  f"function {function_name} tried to be executed but errored: {e}"
         messages.append(message)
+        # all_mem = CONSIOUSNESS_AI.get_messages_to_text()
+        # tokens = re.split(r"[ \n]+", all_mem)
+        # print("tokens of CONSIOUSNESS memory: ", len(tokens))
         pico_response = CONSIOUSNESS_AI.systemMessage(message)
+        # print(f"response CONSIOUSNESS token len = {len(pico_response)}" )
         data = decompileJson(pico_response)
         function_name = data["function"]
         parameters = data["parameters"]
@@ -94,13 +98,14 @@ def handleData(data: list):
 
 
 def getPicoResponse(user_input):
-    print("aaaaaa")
+    # print("aaaaaa")
     global PICO_AI, CONSIOUSNESS_AI, speaker
     CONSIOUSNESS_AI.resetMemory()
     computerInfo = chatFunctions.getComputerInfo()
     time2 = time.time()
     inp = f'Computer Info: {computerInfo}\nPrompt: {user_input}'
     response = PICO_AI.message(inp)
+    # print(f"response token len = {len(response)}" )
     data = decompileJson(response)
     user_response = data["user_response"]
     prompt = data["prompt"]
@@ -110,7 +115,15 @@ def getPicoResponse(user_input):
     if not prompt:
         return
     
+
+    # all_mem = CONSIOUSNESS_AI.get_messages_to_text()
+    # tokens = re.split(r"[ \n]+", all_mem)
+    # print("tokens of CONSIOUSNESS memory: ", len(tokens))
+
     consiousness_response = CONSIOUSNESS_AI.message(inp + "\n" + prompt)
+
+    # print(f"response CONSIOUSNESS token len = {len(consiousness_response)}" )
+
     data = decompileJson(consiousness_response)
 
     try:
@@ -118,7 +131,7 @@ def getPicoResponse(user_input):
         finalResponse = PICO_AI.systemMessage(f"The functions responses: {retult}. Now explain to the user what's happened")
         data = decompileJson(finalResponse)
         finalUserResponse = data["user_response"]
-        speaker.speak(finalResponse)
+        speaker.speak(finalUserResponse)
         speaker.wait_until_done()
         yield finalUserResponse
         return finalUserResponse
@@ -143,5 +156,7 @@ if __name__ == "__main__":
         print()
         time2 = time.time()
         dt = time2- time1
-        print(dt)
-        print(len(PICO_AI.memory))
+        # print(dt)
+        # all_mem = PICO_AI.get_messages_to_text()
+        # tokens = re.split(r"[ \n]+", all_mem)
+        # print("tokens of PICO memory: ", len(tokens))

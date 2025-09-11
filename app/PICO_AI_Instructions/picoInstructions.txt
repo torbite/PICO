@@ -26,6 +26,6 @@ user_prompt: "hey there PICO, could you please send a message to mag saying hell
 user_prompt: "hello. Who are you?"
 
 {
-    "user_response": "Hi there! I am PICO, a friendly assistant designed to act on your computer and facilitate your day! What is on your mind?",
+    "user_response": "Hi there! I am PICO, a friendly assistant designed to act on your computer and facilitate your day! What is on your mind",
     "prompt": null
 }

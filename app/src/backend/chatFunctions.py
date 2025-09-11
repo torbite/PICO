@@ -42,6 +42,14 @@ class AI_character():
     def changeAiModel(self, modelName):
         if modelName in self.models:
             self.model = ChatOpenAI(model=modelName)
+
+    def get_messages_to_text(self):
+        messages = self.memory
+        parts = []
+        for m in messages:
+            content = getattr(m, "content", None)
+            parts.append(str(content) if content is not None else str(m))
+        return "\n".join(parts)
         
 
 
@@ -65,7 +73,8 @@ class AI_builder():
         response = self.model.invoke(self.memory).content
         self.memory.append(AIMessage(response))
         return response
-    
+
+
 # --------------------------------------------------- # --------------------------------------------------- #
 # ------------------------------------------ BASE CHAT FUNCTIONS ------------------------------------------ #
 # --------------------------------------------------- # --------------------------------------------------- #
@@ -93,18 +102,18 @@ def writeText(text):
     return None
 
 
-suchen_app_ki = AI_builder("""You are an AI that can only respond True or False, nothing else.
+app_search = AI_builder("""You are an AI that can only respond True or False, nothing else.
                             You will receive a list from the user and you will need to know whether an app x is in the list or not.
                            Example:
                            User input: "Is the app Whatsapp in the list? ["whatsapp", "spotify", "youtube"]"
                            Expected response: True
                            """)
 def checkIfAppIsOppened(app_name):
-    global suchen_app_ki
+    global app_search
     screen = yf.getCurrentScreenImage()
     results = yf.getModelPrediction("find_app", screen)
     apps = results.keys()
-    isThereApp = suchen_app_ki.message(f"Is the app {app_name} in the list? {apps}")
+    isThereApp = app_search.message(f"Is the app {app_name} in the list? {apps}")
     response = False
     if "true" in isThereApp.lower():
         response = True
@@ -165,7 +174,7 @@ def openApp(app_name, plataform):
 
 
 
-suchen_gesprach_ki = AI_builder("""Você é um assistente que só responde com a posicao de um objeto.
+search_name_AI = AI_builder("""Você é um assistente que só responde com a posicao de um objeto.
         Dado um dicionário com objetos e suas posições, responda apenas com a posicao (uma tupla de dois pares de coordenadas).
 
         Exemplo:
@@ -174,7 +183,7 @@ suchen_gesprach_ki = AI_builder("""Você é um assistente que só responde com a
 
         Sua resposta deve ser apenas: ((10, 20), (20, 13))
         Also make sure to put the name of the closest one. for example, if the user says 'mother' as the name, and there is a person named 'mother' and another named 'friend's mother' then the correct one is 'mother'""")
-# suchen_app_ki.
+# app_search.
 def sendMessageOnWhatsApp(conversation_name, messages):
     """This functions params are 'conversation_names' : str and 'messages' : list.
     It sends the messages, in order, to the target conversation. 
@@ -184,7 +193,7 @@ def sendMessageOnWhatsApp(conversation_name, messages):
     The function does not oppens the whatsappApp by itself. So make sure to open the app before calling this function.
     Final reminder: This function does not send messages to multiple people at once, in case you want to send messages to more than one person, make sure to call it twice and set the parameters to the two different functions.
     Returns if the message was sent or not."""
-    global suchen_gesprach_ki
+    global search_name_AI
     screen = yf.getCurrentScreenImage()
     predictions = yf.getModelPrediction("WhatsApp",screen)
     # element_classes = yf.getTextFromImage(screen, predictions)
@@ -200,7 +209,7 @@ def sendMessageOnWhatsApp(conversation_name, messages):
     element_classes = yf.getTextFromImage(screen, predictions)
     people = element_classes["conversation_box"]
 
-    answer = suchen_gesprach_ki.message(f"""input: {people} 
+    answer = search_name_AI.message(f"""input: {people} 
                                pergunta: Qual a posicao onde o nome da pessoa é {conversation_name}?""")
 
     # print(answer)
